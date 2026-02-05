@@ -12,12 +12,12 @@ router = APIRouter()
 @router.get("/", response_model=List[IssueResponse])
 async def read_issues(
     db: AsyncSession = Depends(deps.get_db),
-    project_id: int | None = Query(None, gt=0, title="Filter by project id", example=1),
+    project_id: int | None = Query(None, gt=0, title="Filter by project id", examples=[1]),
     status: IssueStatus | None = Query(None),
     severity: str | None = Query(None, pattern="^(low|medium|high|critical)$"),
     assignee_id: int | None = Query(None, gt=0),
     search: str | None = Query(None, min_length=1, max_length=100),
-    sort: str = Query("created_at", description="created_at,-created_at,severity,-severity,title,-title", example="-created_at"),
+    sort: str = Query("created_at", description="created_at,-created_at,severity,-severity,title,-title", examples=["-created_at"]),
     page: int = Query(1, ge=1),
     limit: int = Query(20, gt=0, le=100),
     current_user: User = Depends(deps.get_current_user),
@@ -49,7 +49,7 @@ async def create_issue(
 
 @router.get("/{issue_id}", response_model=IssueResponse)
 async def read_issue(
-    issue_id: int = Path(..., gt=0, title="The ID of the issue to get", example=10),
+    issue_id: int = Path(..., gt=0, title="The ID of the issue to get", examples=[10]),
     db: AsyncSession = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_user),
 ) -> Any:
@@ -60,7 +60,7 @@ async def read_issue(
 async def update_issue(
     *,
     db: AsyncSession = Depends(deps.get_db),
-    issue_id: int = Path(..., gt=0, title="The ID of the issue to update", example=10),
+    issue_id: int = Path(..., gt=0, title="The ID of the issue to update", examples=[10]),
     issue_in: IssueUpdate,
     current_user: User = Depends(deps.get_current_user),
 ) -> Any:

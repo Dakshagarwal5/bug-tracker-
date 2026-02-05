@@ -2,13 +2,14 @@ import enum
 from sqlalchemy import String, Boolean, Enum, DateTime, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.db.base_class import Base
+from app.db.mixins import TimestampMixin
 
 
 class UserRole(str, enum.Enum):
     USER = "user"
     ADMIN = "admin"
 
-class User(Base):
+class User(TimestampMixin, Base):
     __tablename__ = "users"
 
     username: Mapped[str] = mapped_column(String(50), unique=True, index=True, nullable=False)

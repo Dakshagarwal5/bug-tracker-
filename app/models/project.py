@@ -2,8 +2,9 @@ from typing import List
 from sqlalchemy import String, Boolean, ForeignKey, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.db.base_class import Base
+from app.db.mixins import TimestampMixin
 
-class Project(Base):
+class Project(TimestampMixin, Base):
     __tablename__ = "projects"
 
     name: Mapped[str] = mapped_column(String, index=True, nullable=False)

@@ -53,28 +53,22 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 15
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
     
-    PRIVATE_KEY_PATH: str = "keys/private.pem"
-    PUBLIC_KEY_PATH: str = "keys/public.pem"
+    PRIVATE_KEY_PATH: str = "/app/keys/private.pem"
+    PUBLIC_KEY_PATH: str = "/app/keys/public.pem"
     
     PRIVATE_KEY: str = ""
     PUBLIC_KEY: str = ""
 
     def load_keys(self):
         """
-        Loads keys using the robust key_management module.
-        Generates keys if they don't exist.
+        Loads keys into memory. Raises RuntimeError if missing.
         """
-        from app.core.key_management import ensure_keys_exist, load_keys
+        from app.core.key_management import load_keys
         
-        # Ensure keys exist or generate them
-        ensure_keys_exist(self.PRIVATE_KEY_PATH, self.PUBLIC_KEY_PATH)
-        
-        # Load keys into memory
+        # Load keys into memory - Strict Failure
         loaded = load_keys(self.PRIVATE_KEY_PATH, self.PUBLIC_KEY_PATH)
         self.PRIVATE_KEY = loaded["private_key"]
         self.PUBLIC_KEY = loaded["public_key"]
-        
-        print(f"Securely loaded RSA keys from {self.PRIVATE_KEY_PATH} and {self.PUBLIC_KEY_PATH}")
 
     model_config = SettingsConfigDict(
         case_sensitive=True,
@@ -83,10 +77,12 @@ class Settings(BaseSettings):
     )
 
 settings = Settings()
-# Attempt to load keys on startup
+
+# Attempt to load keys on startup - Fail Fast
 try:
     settings.load_keys()
 except Exception as e:
-    print(f"CRITICAL: Failed to load authentication keys: {e}")
-    # We do not exit here to allow import, but app startup should fail if keys are missing.
-    # main.py will handle the hard crash on startup.
+    # We print and let the app fail during main.py lifespan or immediate import usage
+    print(f"STARTUP FATAL: {e}")
+    # In many setups, crashing here is safer than starting in a broken state
+    # But for now, we leave the exception printed, and main.py lifespan ensures the process exits

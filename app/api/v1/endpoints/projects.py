@@ -11,8 +11,8 @@ router = APIRouter()
 @router.get("/", response_model=List[ProjectResponse])
 async def read_projects(
     db: AsyncSession = Depends(deps.get_db),
-    page: int = Query(1, ge=1, example=1),
-    limit: int = Query(20, gt=0, le=100, example=20),
+    page: int = Query(1, ge=1, examples=[1]),
+    limit: int = Query(20, gt=0, le=100, examples=[20]),
     search: str | None = Query(None, min_length=1, max_length=100),
     is_archived: bool = Query(False, description="Include archived projects"),
     sort: str = Query("created_at", description="Sort by name,-name,created_at,-created_at"),
@@ -40,7 +40,7 @@ async def create_project(
 
 @router.get("/{project_id}", response_model=ProjectResponse)
 async def read_project(
-    project_id: int = Path(..., gt=0, title="The ID of the project to get", example=1),
+    project_id: int = Path(..., gt=0, title="The ID of the project to get", examples=[1]),
     db: AsyncSession = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_user),
 ) -> Any:
@@ -51,7 +51,7 @@ async def read_project(
 async def update_project(
     *,
     db: AsyncSession = Depends(deps.get_db),
-    project_id: int = Path(..., gt=0, title="The ID of the project to update", example=1),
+    project_id: int = Path(..., gt=0, title="The ID of the project to update", examples=[1]),
     project_in: ProjectUpdate,
     current_user: User = Depends(deps.get_current_user),
 ) -> Any:
@@ -62,7 +62,7 @@ async def update_project(
 async def archive_project(
     *,
     db: AsyncSession = Depends(deps.get_db),
-    project_id: int = Path(..., gt=0, title="The ID of the project to delete", example=1),
+    project_id: int = Path(..., gt=0, title="The ID of the project to delete", examples=[1]),
     current_user: User = Depends(deps.get_current_user),
 ) -> Any:
     service = ProjectService(db)

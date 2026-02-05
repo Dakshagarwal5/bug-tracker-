@@ -10,7 +10,7 @@ router = APIRouter()
 
 @router.get("/", response_model=List[CommentResponse])
 async def read_comments(
-    issue_id: int = Query(..., gt=0, title="ID of the issue to fetch comments for", example=10),
+    issue_id: int = Query(..., gt=0, title="ID of the issue to fetch comments for", examples=[10]),
     db: AsyncSession = Depends(deps.get_db),
     skip: int = Query(0, ge=0, le=1000),
     limit: int = Query(100, gt=0, le=100),
@@ -34,7 +34,7 @@ async def create_comment(
 async def update_comment(
     *,
     db: AsyncSession = Depends(deps.get_db),
-    comment_id: int = Path(..., gt=0, example=1),
+    comment_id: int = Path(..., gt=0, examples=[1]),
     content: str = Body(..., embed=True, min_length=1, max_length=2000),
     current_user: User = Depends(deps.get_current_user),
 ) -> Any:
