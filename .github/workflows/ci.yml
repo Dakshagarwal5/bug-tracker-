@@ -1,0 +1,74 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: bugtracker_test
+        ports:
+          - 5432:5432
+        # Set health checks to wait until postgres has started
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Generate Keys (for Auth)
+        run: |
+          mkdir keys
+          ssh-keygen -t rsa -b 4096 -m PEM -f keys/private.pem -N ""
+          openssl rsa -in keys/private.pem -pubout -outform PEM -out keys/public.pem
+
+      - name: Run Tests
+        env:
+          POSTGRES_SERVER: localhost
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: bugtracker_test
+          REDIS_HOST: localhost
+          SECRET_KEY: testsecretkey
+          # Use in-memory sqlite or actual postgres?
+          # Integration tests in this project use sqlite memory override in conftest.
+          # But for full env check we can set env vars.
+        run: |
+          pytest --cov=app --cov-report=term-missing
+
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Build Docker Image
+        run: docker build . -t bugtracker-backend:latest
