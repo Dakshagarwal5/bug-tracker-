@@ -9,7 +9,7 @@ class Settings(BaseSettings):
     
     # CORS
     BACKEND_CORS_ORIGINS: List[AnyHttpUrl] = []
-    ALLOWED_HOSTS: List[str] = ["localhost", "127.0.0.1"]
+    ALLOWED_HOSTS: List[str] = ["localhost", "127.0.0.1", "test", "testserver"]
 
     @field_validator("ALLOWED_HOSTS", mode="before")
     def assemble_allowed_hosts(cls, v: Union[str, List[str]]) -> List[str]:

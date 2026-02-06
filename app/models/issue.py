@@ -15,7 +15,7 @@ class Issue(TimestampMixin, Base):
     __tablename__ = "issues"
 
     title: Mapped[str] = mapped_column(String, index=True, nullable=False)
-    description: Mapped[str] = mapped_column(Text, nullable=False)
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
     status: Mapped[IssueStatus] = mapped_column(Enum(IssueStatus), default=IssueStatus.OPEN, nullable=False)
     severity: Mapped[str] = mapped_column(String, default="low") # low, medium, high, critical
     
