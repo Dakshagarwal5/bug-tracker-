@@ -1,5 +1,5 @@
 from typing import List, Optional
-from sqlalchemy import select, asc, desc
+from sqlalchemy import select, asc, desc, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.repositories.base import BaseRepository
 from app.models.project import Project
@@ -40,5 +40,10 @@ class ProjectRepository(BaseRepository[Project]):
 
     async def get_by_id_active(self, id: int) -> Optional[Project]:
         query = select(Project).where(Project.id == id, Project.is_archived == False)
+        result = await self.db.execute(query)
+        return result.scalars().first()
+
+    async def get_by_key(self, key: str) -> Optional[Project]:
+        query = select(Project).where(func.lower(Project.key) == key.lower())
         result = await self.db.execute(query)
         return result.scalars().first()

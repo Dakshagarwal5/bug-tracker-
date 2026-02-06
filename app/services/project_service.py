@@ -1,19 +1,35 @@
 from typing import List, Optional
+from sqlalchemy.exc import ProgrammingError
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.repositories.project import ProjectRepository
 from app.schemas.project import ProjectCreate, ProjectUpdate
 from app.models.user import User
 from app.models.project import Project
-from app.core.exceptions import EntityNotFoundException, PermissionDeniedException
+from app.core.exceptions import EntityNotFoundException, PermissionDeniedException, DomainRuleViolationException, DatabaseSchemaMismatchException
+
+
+
+def _is_missing_project_key_column(exc: ProgrammingError) -> bool:
+    message = str(getattr(exc, "orig", exc)).lower()
+    return "projects.key" in message and "does not exist" in message
+
 
 class ProjectService:
     def __init__(self, db: AsyncSession):
         self.project_repo = ProjectRepository(db)
 
     async def create_project(self, project_in: ProjectCreate, current_user: User) -> Project:
-        project_data = project_in.model_dump()
-        project_data["owner_id"] = current_user.id
-        return await self.project_repo.create(project_data)
+        try:
+            existing = await self.project_repo.get_by_key(project_in.key)
+            if existing:
+                raise DomainRuleViolationException("Project key already exists")
+            project_data = project_in.model_dump()
+            project_data["owner_id"] = current_user.id
+            return await self.project_repo.create(project_data)
+        except ProgrammingError as exc:
+            if _is_missing_project_key_column(exc):
+                raise DatabaseSchemaMismatchException()
+            raise
 
     async def get_projects(
         self,
@@ -44,7 +60,18 @@ class ProjectService:
         if project.owner_id != current_user.id and not current_user.is_admin:
             raise PermissionDeniedException("Only Owner or Admin can update project")
 
-        return await self.project_repo.update(project, project_in.model_dump(exclude_unset=True))
+        update_data = project_in.model_dump(exclude_unset=True)
+        new_key = update_data.get("key")
+        try:
+            if new_key and new_key.lower() != project.key.lower():
+                existing = await self.project_repo.get_by_key(new_key)
+                if existing:
+                    raise DomainRuleViolationException("Project key already exists")
+            return await self.project_repo.update(project, update_data)
+        except ProgrammingError as exc:
+            if _is_missing_project_key_column(exc):
+                raise DatabaseSchemaMismatchException()
+            raise
 
     async def archive_project(self, project_id: int, current_user: User) -> Project:
         project = await self.get_project(project_id)

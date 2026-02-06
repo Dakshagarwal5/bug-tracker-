@@ -1,27 +1,23 @@
 from typing import Optional
 from datetime import datetime
-from pydantic import BaseModel, EmailStr, ConfigDict, field_validator
+from pydantic import BaseModel, EmailStr, ConfigDict, Field, field_validator
 from app.models.user import UserRole
 
 class UserBase(BaseModel):
-    username: str
-    email: EmailStr
-    full_name: Optional[str] = None
+    username: Optional[str] = Field(None, json_schema_extra={"examples": ["johndoe"]})
+    email: EmailStr = Field(..., json_schema_extra={"examples": ["john@example.com"]})
+    full_name: Optional[str] = Field(None, json_schema_extra={"examples": ["John Doe"]})
     is_active: Optional[bool] = True
     role: UserRole = UserRole.USER
 
 class UserCreate(UserBase):
-    password: str
+    password: str = Field(..., min_length=8, json_schema_extra={"example": "strongpassword"})
 
     @field_validator("password")
     @classmethod
     def validate_password_strength(cls, v: str) -> str:
         if len(v) < 8:
             raise ValueError("Password must be at least 8 characters long")
-        if not any(ch.islower() for ch in v) or not any(ch.isupper() for ch in v):
-            raise ValueError("Password must include both upper and lower case letters")
-        if not any(ch.isdigit() for ch in v):
-            raise ValueError("Password must include at least one digit")
         return v
 
 class UserUpdate(BaseModel):
