@@ -4,6 +4,8 @@ from typing import AsyncGenerator
 from httpx import AsyncClient, ASGITransport
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from app.db.base_class import Base
+from app.db import base  # noqa: F401
+from app.core.rate_limit import redis_client
 from app.db.session import get_db
 from app.main import app
 from app.core.config import settings
@@ -43,3 +45,10 @@ async def client(db_session: AsyncSession) -> AsyncGenerator[AsyncClient, None]:
         yield c
     
     app.dependency_overrides.clear()
+
+
+@pytest_asyncio.fixture(autouse=True, scope="function")
+async def reset_inmemory_rate_limiter():
+    if hasattr(redis_client, "flushall"):
+        await redis_client.flushall()
+    yield

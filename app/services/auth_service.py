@@ -13,13 +13,15 @@ class AuthService:
         self.user_repo = UserRepository(db)
 
     async def register_user(self, user_in: UserCreate) -> UserResponse:
+        username = user_in.username or user_in.email.split("@")[0]
         existing_user = await self.user_repo.get_by_email(user_in.email)
-        existing_username = await self.user_repo.get_by_username(user_in.username)
+        existing_username = await self.user_repo.get_by_username(username)
         if existing_user or existing_username:
             raise AuthenticationFailedException(detail="Email or username already registered")
         
         hashed_pw = get_password_hash(user_in.password)
         user_data = user_in.model_dump(exclude={"password"})
+        user_data["username"] = username
         user_data["hashed_password"] = hashed_pw
         # keep legacy flag aligned
         user_data["is_admin"] = user_in.role == UserRole.ADMIN

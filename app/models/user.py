@@ -16,7 +16,7 @@ class User(TimestampMixin, Base):
     email: Mapped[str] = mapped_column(String, unique=True, index=True, nullable=False)
     # Using Argon2 hashes, which are long strings
     hashed_password: Mapped[str] = mapped_column(String, nullable=False)
-    full_name: Mapped[str] = mapped_column(String, index=True)
+    full_name: Mapped[str | None] = mapped_column(String, index=True, nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     role: Mapped[UserRole] = mapped_column(Enum(UserRole), default=UserRole.USER, nullable=False)
     # kept for backward compatibility with existing checks; maintained in sync with role

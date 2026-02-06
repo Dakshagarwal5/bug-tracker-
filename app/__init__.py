@@ -1,0 +1,1 @@
+"""Bug tracker application package."""
