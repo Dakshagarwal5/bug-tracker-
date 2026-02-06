@@ -64,12 +64,17 @@ class IssueService:
         issue = await self.issue_repo.get_by_id(issue_id)
         if not issue:
             raise EntityNotFoundException(entity_name="Issue", identifier=issue_id)
+        await self.issue_repo.db.refresh(issue, ["project"])
+        if issue.project and issue.project.is_archived:
+            raise EntityNotFoundException(entity_name="Project", identifier=issue.project_id)
         return issue
 
     async def update_issue(self, issue_id: int, issue_in: IssueUpdate, current_user: User) -> Issue:
         issue = await self.get_issue(issue_id)
         
         await self.issue_repo.db.refresh(issue, ["project"])
+        if issue.project and issue.project.is_archived:
+            raise EntityNotFoundException(entity_name="Project", identifier=issue.project_id)
         is_reporter = issue.reporter_id == current_user.id
         is_assignee = issue.assignee_id == current_user.id
         is_admin = current_user.is_admin

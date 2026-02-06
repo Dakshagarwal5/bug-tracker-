@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 from typing import Optional, Any, Union
+from uuid import uuid4
 from jose import jwt
 from passlib.context import CryptContext
 from app.core.config import settings
@@ -18,7 +19,13 @@ def create_access_token(subject: Union[str, Any], expires_delta: Optional[timede
     else:
         expire = datetime.utcnow() + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     
-    to_encode = {"exp": expire, "sub": str(subject), "type": "access"}
+    to_encode = {
+        "exp": expire,
+        "sub": str(subject),
+        "type": "access",
+        "ver": 1,
+        "jti": str(uuid4()),
+    }
     
     # RS256 requires a private key to sign
     if not settings.PRIVATE_KEY:

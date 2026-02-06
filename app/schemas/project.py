@@ -4,6 +4,7 @@ from datetime import datetime
 
 class ProjectBase(BaseModel):
     name: str
+    key: str
     description: Optional[str] = None
 
 class ProjectCreate(ProjectBase):
@@ -11,6 +12,7 @@ class ProjectCreate(ProjectBase):
 
 class ProjectUpdate(BaseModel):
     name: Optional[str] = None
+    key: Optional[str] = None
     description: Optional[str] = None
     is_archived: Optional[bool] = None
 
