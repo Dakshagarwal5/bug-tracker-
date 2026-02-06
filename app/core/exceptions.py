@@ -37,3 +37,8 @@ class DomainRuleViolationException(BaseAPIException):
     """Specific for domain logic violations like State Machine laws"""
     def __init__(self, detail: str):
         super().__init__(status_code=status.HTTP_400_BAD_REQUEST, detail=detail)
+
+
+class DatabaseSchemaMismatchException(BaseAPIException):
+    def __init__(self, detail: str = "Database schema is out of date. Run: alembic upgrade head"):
+        super().__init__(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=detail)
