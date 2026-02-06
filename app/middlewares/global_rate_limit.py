@@ -1,5 +1,7 @@
 from starlette.middleware.base import BaseHTTPMiddleware
-from fastapi import Request, Response
+from fastapi import HTTPException, Request, Response
+from fastapi.responses import JSONResponse
+from redis.exceptions import ConnectionError as RedisConnectionError
 from app.core.rate_limit import RateLimiter
 
 class GlobalRateLimitMiddleware(BaseHTTPMiddleware):
@@ -24,16 +26,18 @@ class GlobalRateLimitMiddleware(BaseHTTPMiddleware):
         try:
             # Fake response object or modify limiter signature?
             # Let's just copy logic:
-            await self.limiter(request, None) 
-        except Exception as e:
-            # If it's the specific HTTPException from RateLimiter
-            if hasattr(e, "status_code") and e.status_code == 429:
+            await self.limiter(request, None)
+        except RedisConnectionError:
+            return JSONResponse(
+                status_code=503,
+                content={
+                    "detail": "Service unavailable: cache / rate-limit service is down."
+                },
+            )
+        except HTTPException as exc:
+            if exc.status_code == 429:
                 return Response("Too many requests", status_code=429)
-            # Re-raise other exceptions? Or pass?
-            # Actually RateLimiter raises starlette/fastapi HTTPException.
-            # BaseHTTPMiddleware might catch it and return 500 if not handled.
-            # We should return a Response object.
-            return Response("Too many requests", status_code=429)
+            raise
 
         response = await call_next(request)
         return response

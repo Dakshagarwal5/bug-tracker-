@@ -7,7 +7,11 @@ ALLOWED_SEVERITIES = {"low", "medium", "high", "critical"}
 
 class IssueBase(BaseModel):
     title: str = Field(..., min_length=1, example="Fix login bug", title="Issue Title")
-    description: str = Field(..., example="Login page returns 500 status code", title="Issue Description")
+    description: Optional[str] = Field(
+        None,
+        example="Login page returns 500 status code",
+        title="Issue Description",
+    )
     severity: str = Field("low", example="low", title="Severity Level")
 
     @field_validator("severity")
@@ -18,6 +22,11 @@ class IssueBase(BaseModel):
         return v
 
 class IssueCreate(IssueBase):
+    description: str = Field(
+        ...,
+        example="Login page returns 500 status code",
+        title="Issue Description",
+    )
     project_id: int = Field(..., gt=0, example=1, title="ID of the Project")
     assignee_id: Optional[int] = Field(None, gt=0, example=2, title="ID of the Assignee")
 
