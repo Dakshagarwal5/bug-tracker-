@@ -8,6 +8,7 @@ class Project(TimestampMixin, Base):
     __tablename__ = "projects"
 
     name: Mapped[str] = mapped_column(String, index=True, nullable=False)
+    key: Mapped[str] = mapped_column(String(20), unique=True, index=True, nullable=False)
     description: Mapped[str] = mapped_column(Text, nullable=True)
     is_archived: Mapped[bool] = mapped_column(Boolean, default=False) # Soft delete
     

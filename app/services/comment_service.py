@@ -25,6 +25,9 @@ class CommentService:
         return await self.comment_repo.create(comment_data)
 
     async def get_comments(self, issue_id: int, skip: int = 0, limit: int = 100) -> List[Comment]:
+        issue = await self.issue_repo.get_by_id(issue_id)
+        if not issue:
+            raise EntityNotFoundException(entity_name="Issue", identifier=issue_id)
         return await self.comment_repo.get_by_issue(issue_id, skip, limit)
     
     async def update_comment(self, comment_id: int, content: str, current_user: User) -> Comment:
