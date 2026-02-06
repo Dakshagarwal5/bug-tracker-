@@ -1,17 +1,17 @@
 from typing import Optional
 from datetime import datetime
-from pydantic import BaseModel, EmailStr, ConfigDict, field_validator
+from pydantic import BaseModel, EmailStr, ConfigDict, Field, field_validator
 from app.models.user import UserRole
 
 class UserBase(BaseModel):
-    username: Optional[str] = None
-    email: EmailStr
-    full_name: Optional[str] = None
+    username: Optional[str] = Field(None, json_schema_extra={"examples": ["johndoe"]})
+    email: EmailStr = Field(..., json_schema_extra={"examples": ["john@example.com"]})
+    full_name: Optional[str] = Field(None, json_schema_extra={"examples": ["John Doe"]})
     is_active: Optional[bool] = True
     role: UserRole = UserRole.USER
 
 class UserCreate(UserBase):
-    password: str
+    password: str = Field(..., min_length=8, json_schema_extra={"example": "strongpassword"})
 
     @field_validator("password")
     @classmethod
